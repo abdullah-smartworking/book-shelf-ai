@@ -1,0 +1,31 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+build/
+*.tsbuildinfo
+
+# env / secrets — never commit these, and never paste them into an AI prompt
+.env
+.env.*
+!.env.example
+
+# atomic-write temp files produced by the JSON data store
+data/*.tmp
+data/*.tmp.*
+*.json.*.tmp
+
+# Claude Code local settings (machine-specific; CLAUDE.md itself IS committed — Day 2)
+.claude/settings.local.json
+
+# logs
+*.log
+npm-debug.log*
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

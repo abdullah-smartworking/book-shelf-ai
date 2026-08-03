@@ -1,0 +1,20 @@
+{
+  "name": "bookshelf",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BookShelf - a personal book catalogue. Monorepo root.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @bookshelf/api",
+    "start": "npm run start --workspace @bookshelf/api",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
+}

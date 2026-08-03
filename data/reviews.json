@@ -1,0 +1,74 @@
+[
+  {
+    "id": "review_001",
+    "bookId": "book_001",
+    "userId": "user_001",
+    "rating": 5,
+    "text": "Essential reading for any developer. The chapter on orthogonality alone changed how I structure modules.",
+    "createdAt": "2025-01-20T14:00:00Z"
+  },
+  {
+    "id": "review_002",
+    "bookId": "book_001",
+    "userId": "user_002",
+    "rating": 4,
+    "text": "Timeless advice, though a few of the tooling examples have aged badly. Skim those and keep the principles.",
+    "createdAt": "2025-01-21T09:15:00Z"
+  },
+  {
+    "id": "review_003",
+    "bookId": "book_003",
+    "userId": "user_001",
+    "rating": 5,
+    "text": "The clearest explanation of consistency models I have read anywhere. Chapter 9 is worth the price of the book.",
+    "createdAt": "2025-01-22T18:40:00Z"
+  },
+  {
+    "id": "review_004",
+    "bookId": "book_007",
+    "userId": "user_003",
+    "rating": 5,
+    "text": "Dense for the first hundred pages, then completely absorbing. The ecology of Arrakis is the real main character.",
+    "createdAt": "2025-01-23T20:05:00Z"
+  },
+  {
+    "id": "review_005",
+    "bookId": "book_007",
+    "userId": "user_002",
+    "rating": 3,
+    "text": "I respect it more than I enjoyed it. The politics are excellent, the pacing in the middle third is not.",
+    "createdAt": "2025-01-24T07:25:00Z"
+  },
+  {
+    "id": "review_006",
+    "bookId": "book_010",
+    "userId": "user_001",
+    "rating": 5,
+    "text": "Pure problem-solving joy. Rocky is the best non-human character in recent science fiction.",
+    "createdAt": "2025-01-25T21:00:00Z"
+  },
+  {
+    "id": "review_007",
+    "bookId": "book_015",
+    "userId": "user_003",
+    "rating": 5,
+    "text": "The appendix on Newspeak is the part that stayed with me longest. Read it as a book about language.",
+    "createdAt": "2025-01-26T16:30:00Z"
+  },
+  {
+    "id": "review_008",
+    "bookId": "book_024",
+    "userId": "user_002",
+    "rating": 4,
+    "text": "Excellent on the mechanics of judgement, less convincing where it leans on priming research that did not replicate.",
+    "createdAt": "2025-01-27T12:10:00Z"
+  },
+  {
+    "id": "review_009",
+    "bookId": "book_029",
+    "userId": "user_001",
+    "rating": 4,
+    "text": "Repetitive by design, since he was writing to himself. Better read a page at a time than cover to cover.",
+    "createdAt": "2025-01-28T06:45:00Z"
+  }
+]

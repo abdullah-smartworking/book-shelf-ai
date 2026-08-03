@@ -1,0 +1,30 @@
+[
+  {
+    "id": "shelf_001",
+    "userId": "user_001",
+    "name": "Currently Reading",
+    "bookIds": ["book_003", "book_014"],
+    "createdAt": "2025-01-15T10:30:00Z"
+  },
+  {
+    "id": "shelf_002",
+    "userId": "user_001",
+    "name": "Finished",
+    "bookIds": ["book_001", "book_007", "book_010", "book_015", "book_029"],
+    "createdAt": "2025-01-15T10:31:00Z"
+  },
+  {
+    "id": "shelf_003",
+    "userId": "user_001",
+    "name": "Want to Read",
+    "bookIds": ["book_006", "book_022", "book_026"],
+    "createdAt": "2025-01-15T10:32:00Z"
+  },
+  {
+    "id": "shelf_004",
+    "userId": "user_002",
+    "name": "Currently Reading",
+    "bookIds": ["book_017"],
+    "createdAt": "2025-01-18T19:00:00Z"
+  }
+]
