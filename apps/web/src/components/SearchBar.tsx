@@ -41,6 +41,15 @@ export function SearchBar({ value, onChange, resultLabel }: SearchBarProps): Rea
                 Search books by title, author or genre
               </label>
 
+              {/*
+                Note the absence of `focus:outline-none`. It looks harmless, but `:focus`
+                also matches whenever `:focus-visible` does, and Tailwind emits the
+                `focus:` rule after the `focus-visible:` one — so it set
+                `outline-style: none` and silently cancelled the ring below: computed
+                style was a 2px accent outline with no style to draw it. Chrome already
+                limits its default ring to `:focus-visible`, so suppressing it was never
+                needed. Caught by tabbing to the field and reading `outlineStyle`.
+              */}
               <input
                 id="book-search"
                 type="search"
@@ -50,7 +59,7 @@ export function SearchBar({ value, onChange, resultLabel }: SearchBarProps): Rea
                 autoComplete="off"
                 className="w-full rounded-full border border-line bg-surface py-2.5 pr-10 pl-10
                            text-sm text-ink placeholder:text-muted/70
-                           focus:border-accent focus:outline-none
+                           focus:border-accent
                            focus-visible:outline-2 focus-visible:outline-offset-2
                            focus-visible:outline-accent"
               />

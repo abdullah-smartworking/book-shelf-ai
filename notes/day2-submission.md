@@ -318,10 +318,38 @@ Two bugs I shipped, both in code I wrote to a detailed spec of my own:
    computed value of `--color-paper`.
 2. **Two × buttons in the search field.** `<input type="search">` draws a native clear
    button in Chrome, next to my styled one. Invisible in the source, obvious on screen.
+3. **The keyboard focus ring was never drawn.** I had `focus:outline-none` alongside
+   `focus-visible:outline-2 focus-visible:outline-accent` on the search input. `:focus`
+   also matches whenever `:focus-visible` does, and Tailwind emits the `focus:` rule
+   *after* the `focus-visible:` one — so `outline-style: none` won. Computed style was
+   literally `2px none rgb(217,122,78)`: correct width, correct colour, no style to draw
+   it with. Found by tabbing to the field and reading `outlineStyle`, not by looking —
+   the field still turned orange on focus via its border, so it *appeared* fine. Fixed
+   in [`SearchBar.tsx`](../apps/web/src/components/SearchBar.tsx) with a comment.
 
-Neither is a context problem, and neither would have been caught by a better prompt.
-Both needed a browser. Day 2's lesson is that context quality raises the ceiling on what
-the AI aims at; it does nothing for verification, and verification is still mine.
+All three are the same shape: **valid-looking code, silently doing nothing.** None would
+have been caught by a better prompt, `tsc`, the test suite, or a screenshot. Each needed
+a running browser and a specific property read. Day 2's real lesson is that context
+quality raises the ceiling on what the AI aims at; it does nothing for verification, and
+verification is still mine.
+
+### 4.1 Three false alarms worth recording
+
+While verifying, my own test harness produced three failures that were not real:
+
+- **Search results looked one keystroke behind.** My loop read the DOM before React had
+  re-rendered. A longer wait showed every term correct.
+- **The card hover lift looked broken** — `getComputedStyle(el).transform` was `none`.
+  Tailwind v4 uses the standalone `translate` property, not `transform`; reading
+  `translate` showed `0px -2px`, and the hovered card's rect was genuinely 2px higher.
+- **Retry looked broken** — clicking it left the error card up. My click had landed in
+  screenshot-pixel space rather than CSS-pixel space; dispatching the click on the
+  element recovered the full 30 books without a reload.
+
+Worth writing down because in each case the instinct is to "fix" working code. The
+discipline that mattered was checking the measurement before changing the thing measured
+— which is exactly the mistake I nearly made when I assumed the control agent's
+`smoke.sh` edit was harmful, and had to withdraw the claim after reading it.
 
 **One sentence, what I would do differently:** write the reusable half of a brief into
 `CLAUDE.md` the *first* time I need it rather than the third — Part 2's design brief was
