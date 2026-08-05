@@ -1,0 +1,127 @@
+@import 'tailwindcss';
+
+/**
+ * Design tokens. Tailwind CSS v4 keeps theme config in CSS — there is no
+ * tailwind.config.js. Anything declared under `@theme` becomes a utility, so
+ * `--color-paper` gives you `bg-paper`, `text-paper`, `border-paper`, and so on.
+ *
+ * Components must use these tokens, never raw hex. That is what makes the dark-mode
+ * override below a five-line change instead of a sweep through every file.
+ */
+@theme {
+  --color-paper: #fbf8f3;
+  --color-surface: #ffffff;
+  --color-ink: #1c1917;
+  --color-muted: #78716c;
+  --color-line: #e7e2da;
+  --color-accent: #b4532a;
+  --color-accent-soft: #f5e6de;
+
+  --font-serif: ui-serif, Georgia, Cambria, 'Times New Roman', serif;
+}
+
+/**
+ * Dark mode by system preference. Re-pointing the same tokens at darker values is all
+ * it takes; no `dark:` variant appears anywhere in the components.
+ *
+ * The accent lightens to #D97A4E — the light-mode terracotta is too dark to read on a
+ * near-black surface, so the token changes rather than the markup.
+ *
+ * ⚠️ This MUST be a plain `:root` block, not `@theme`. Tailwind v4 hoists `@theme` out
+ * of any wrapping at-rule and emits its declarations unconditionally — nesting it in a
+ * media query silently applies the dark palette in BOTH schemes. (That bug shipped in
+ * the first draft of this file and was only caught by loading the app in light mode.)
+ * Overriding the same custom properties here works because every generated utility
+ * resolves `var(--color-*)` at runtime.
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-paper: #141310;
+    --color-surface: #1e1c18;
+    --color-ink: #f5f1ea;
+    --color-muted: #a8a29b;
+    --color-line: #2f2c26;
+    --color-accent: #d97a4e;
+    --color-accent-soft: #3a2a20;
+  }
+}
+
+@layer base {
+  html {
+    /* Anchors and skip links land below the sticky header rather than under it. */
+    scroll-padding-top: 6rem;
+  }
+
+  body {
+    @apply bg-paper text-ink antialiased;
+  }
+
+  /* One visible focus style for the whole app, so keyboard users are never lost. */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent;
+  }
+
+  /**
+   * `type="search"` gets a browser-drawn clear button in WebKit/Blink, which sat right
+   * next to our own styled one — two × glyphs in the same field. Suppress the native
+   * one; ours is the keyboard-accessible, token-styled version.
+   */
+  input[type='search']::-webkit-search-cancel-button,
+  input[type='search']::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
+
+@layer utilities {
+  /* Line clamping for titles (2) and descriptions (3). */
+  .clamp-2 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .clamp-3 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+}
+
+/**
+ * Skeleton shimmer. Defined here rather than inline because it needs a keyframe.
+ * Anyone who has asked their OS to reduce motion gets a static block instead.
+ */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--color-ink) 6%, transparent),
+    transparent
+  );
+  animation: shimmer 1.6s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer::after {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+}

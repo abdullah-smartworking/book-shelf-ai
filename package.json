@@ -13,7 +13,9 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace @bookshelf/api",
+    "dev:web": "npm run dev --workspace @bookshelf/web",
     "start": "npm run start --workspace @bookshelf/api",
+    "build": "npm run build --workspace @bookshelf/web",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present"
   }
