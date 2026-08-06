@@ -1,0 +1,19 @@
+---
+description: Repo-wide policy that applies regardless of which file is open
+globs:
+alwaysApply: true
+---
+
+- BookShelf is a 5-day course project. Prefer the smallest change that satisfies the
+  current day's brief over a general solution for a problem we don't have yet.
+- Don't add npm dependencies without asking — no router, no ORM, no test framework
+  besides `node:test`, no icon library (inline SVG only).
+- Don't add a real database. JSON files in `/data` are a deliberate constraint.
+- Don't edit `data/*.json` by hand — go through the API so IDs and timestamps stay
+  consistent.
+- `packages/shared/**`: every exported type is `z.infer<typeof someSchema>` — never
+  hand-write an interface that duplicates a schema. A change here touches both apps.
+- Don't `console.log` outside `requestLogger`/`errorHandler` (API) or ad hoc in
+  components (frontend).
+- Don't widen scope. If a task lists N endpoints/components, build N — flag anything
+  else you think is missing instead of adding it unasked.

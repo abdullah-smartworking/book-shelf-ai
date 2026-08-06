@@ -61,6 +61,36 @@ export const createBookSchema = z.object({
 
 export type CreateBookInput = z.infer<typeof createBookSchema>;
 
+/**
+ * Validation schema for `PUT /api/books/:id`.
+ *
+ * Deliberately NOT `createBookSchema.partial()`: several fields there carry
+ * `.default(...)`, and Zod applies a field's default whenever the key is absent —
+ * so a partial() version would silently reset an omitted `description`/`isbn`/
+ * `coverUrl` to its create-time default instead of leaving it unchanged. Every
+ * field here is optional with no default, so "omitted" means "don't touch it."
+ * The `.refine` rejects an empty body — a PUT with nothing to change is a no-op
+ * the client almost certainly didn't intend.
+ */
+export const updateBookSchema = z
+  .object({
+    title: z.string().trim().min(1, 'title is required').max(300).optional(),
+    author: z.string().trim().min(1, 'author is required').max(200).optional(),
+    genre: z.string().trim().min(1, 'genre is required').max(100).optional(),
+    year: z
+      .number({ invalid_type_error: 'year must be a number' })
+      .int('year must be a whole number')
+      .min(EARLIEST_ACCEPTED_YEAR, `year must be ${EARLIEST_ACCEPTED_YEAR} or later`)
+      .max(LATEST_ACCEPTED_YEAR, `year must be ${LATEST_ACCEPTED_YEAR} or earlier`)
+      .optional(),
+    isbn: z.string().trim().min(10, 'isbn looks too short').max(20).nullable().optional(),
+    description: z.string().trim().max(2000).optional(),
+    coverUrl: z.string().url('coverUrl must be a valid URL').nullable().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, { message: 'at least one field must be provided' });
+
+export type UpdateBookInput = z.infer<typeof updateBookSchema>;
+
 export const BOOK_SORT_FIELDS = ['title', 'author', 'year', 'addedAt'] as const;
 export type BookSortField = (typeof BOOK_SORT_FIELDS)[number];
 

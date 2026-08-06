@@ -21,7 +21,7 @@ Run from the repo root. `npm run dev` starts the API only.
 npm install              # workspaces: apps/*, packages/*
 npm run dev              # API on :3000 (PORT=3001 to override)
 npm run dev:web          # Vite dev server on :5173, proxies /api to the API
-npm test                 # 20 integration tests, isolated temp data dir
+npm test                 # 41 integration tests, isolated temp data dir
 npm run typecheck        # tsc --noEmit across both workspaces
 ./scripts/smoke.sh       # end-to-end curl script against a running server
 ```
@@ -38,8 +38,9 @@ data/jsonStore.ts      knows "a collection is a JSON file"
 data/*.json
 ```
 
-Day 3 adds an MCP server over this data, and it has no HTTP request — so logic left in a
-route handler would have to be copy-pasted. That is why it lives in `services/`.
+`apps/mcp-server` (Day 3) is a separate workspace that reads `data/*.json` directly —
+read-only, so it skips `jsonStore.ts`'s mutex on purpose (nothing to lose an update to).
+It does not import from `apps/api`; only `@bookshelf/shared` types cross that boundary.
 
 # Conventions
 
@@ -91,6 +92,9 @@ route handler would have to be copy-pasted. That is why it lives in `services/`.
   app import the same schemas, so a change there is a change to both.
 - **Don't widen scope.** If the brief says four endpoints, build four. Flag anything you
   think is missing instead of adding it unasked.
+- **Don't add `react-router-dom`.** `App.tsx` switches between the catalogue and a book's
+  detail view with one `useState<string | null>` — a second page doesn't need a router.
+  If a third page shows up, that's the point to reconsider, not before.
 
 # Known Limitations (honest, not aspirational)
 
@@ -103,5 +107,8 @@ route handler would have to be copy-pasted. That is why it lives in `services/`.
   contradicted *Meditations*, c. 180 CE, in our own seed data).
 - Search is an O(n) in-memory substring scan with hand-tuned field weights. Correct at
   30 records; not a search engine.
-- `PUT`/`DELETE /api/books/:id`, the shelves endpoints and the reviews endpoints are in
-  the target spec but **not yet implemented**.
+- The shelves endpoints are in the target spec but **not yet implemented** — only a
+  seeded `data/shelves.json` exists, with no repository/service/route touching it.
+  `DELETE /api/books/:id` does not cascade into it for that reason (see the comment
+  on `books.service.deleteBook`); it also doesn't cascade into `reviews.json`, which
+  *does* have a repository — flagged, not silently decided, since nothing asked for it.

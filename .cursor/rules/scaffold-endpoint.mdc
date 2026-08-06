@@ -1,0 +1,29 @@
+---
+description: How to scaffold a new BookShelf API endpoint — Cursor equivalent of .claude/skills/scaffold-endpoint/SKILL.md. Manually invoke when adding a new apps/api route/resource.
+globs: apps/api/**/*.ts
+alwaysApply: false
+---
+
+Cursor has no direct SKILL.md equivalent (no on-demand invocation, only always-on or
+glob-scoped rules), so this file plays the same role as
+`.claude/skills/scaffold-endpoint/SKILL.md` — same content, reference that file for the
+full reference-example code blocks if this one is trimmed for length.
+
+When asked to add a new REST endpoint to `apps/api`, build bottom-up:
+
+1. Shared Zod schema in `packages/shared/src/<resource>.ts` (skip if it already exists
+   — check `book.ts`/`review.ts`/`shelf.ts` first), re-exported from `index.ts`.
+2. Repository function in `apps/api/src/data/<resource>.repository.ts` — writes go
+   through `mutateCollection()`, ids are `<prefix>_NNN` generated inside the mutator.
+3. Service function in `apps/api/src/services/<resource>.service.ts` — no `req`/`res`,
+   builds records field-by-field, throws typed errors from `../errors`.
+4. Route handler — nest sub-resources on the parent router (e.g. reviews go on
+   `booksRouter` as `/:id/reviews`); no `try/catch`, no `asyncHandler`.
+5. Wire a new top-level router into `routes/index.ts` if it isn't a sub-resource.
+6. `node:test` file in `apps/api/tests/` mirroring `books.test.ts`'s isolated-temp-dir
+   + dynamic-`import('../src/app')` pattern.
+
+Constraints: static routes (`/search`) before `/:id` at the same depth; response
+envelope is `{ data }` / `{ error: { code, message, details? } }`; `POST` → 201 +
+`Location`; `DELETE` → 204 or 404; never spread raw input into a repository call;
+never add a dependency without asking.

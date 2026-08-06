@@ -7,20 +7,41 @@ function matchedFields(book: CatalogueBook): string[] {
 
 /**
  * One book. An `<article>` rather than a `<div>` because it is a self-contained piece
- * of content, which gives screen readers something to navigate by.
+ * of content, which gives screen readers something to navigate by. It doubles as the
+ * click target for the detail page — `role="button"` + `onKeyDown` rather than
+ * wrapping in a real `<button>`, since a `<button>` can't contain the `<h2>` this
+ * card already uses semantically. Unlike a native button, `role="button"` gets no
+ * free Enter/Space activation, so `onKeyDown` has to provide it.
  *
  * The hover treatment (2px lift, border warming to accent, soft shadow) is on the
  * group so the whole card responds as one object. `motion-reduce:hover:translate-y-0`
  * respects the OS "reduce motion" setting.
  */
-export function BookCard({ book }: { book: CatalogueBook }): React.JSX.Element {
+export function BookCard({
+  book,
+  onSelect,
+}: {
+  book: CatalogueBook;
+  onSelect: (id: string) => void;
+}): React.JSX.Element {
   const matched = matchedFields(book);
 
   return (
     <article
-      className="group flex flex-col rounded-xl border border-line bg-surface p-5 transition
-                 duration-150 ease-out hover:-translate-y-0.5 hover:border-accent
-                 hover:shadow-lg hover:shadow-ink/5 motion-reduce:hover:translate-y-0"
+      role="button"
+      tabIndex={0}
+      aria-label={`View details for ${book.title} by ${book.author}`}
+      onClick={() => onSelect(book.id)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onSelect(book.id);
+        }
+      }}
+      className="group flex cursor-pointer flex-col rounded-xl border border-line bg-surface p-5
+                 transition duration-150 ease-out hover:-translate-y-0.5 hover:border-accent
+                 hover:shadow-lg hover:shadow-ink/5 motion-reduce:hover:translate-y-0
+                 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
       <div className="mb-3 flex items-start justify-between gap-3">
         <span

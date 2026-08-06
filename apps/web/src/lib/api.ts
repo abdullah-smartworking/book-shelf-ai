@@ -1,9 +1,13 @@
 import type {
   ApiErrorResponse,
+  ApiItemResponse,
   ApiListResponse,
   ApiSearchResponse,
   Book,
   BookSearchHit,
+  BookWithReviews,
+  CreateReviewInput,
+  Review,
 } from '@bookshelf/shared';
 
 /**
@@ -32,11 +36,26 @@ export class ApiError extends Error {
  * `{ error: { code, message } }` and rethrown as an `ApiError`, so callers branch on
  * `code` and never have to inspect status codes or response bodies themselves.
  */
-async function fetchJson<T>(path: string, signal?: AbortSignal): Promise<T> {
+interface FetchJsonOptions {
+  method?: 'GET' | 'POST';
+  body?: unknown;
+  signal?: AbortSignal;
+}
+
+async function fetchJson<T>(path: string, options: FetchJsonOptions = {}): Promise<T> {
+  const { method = 'GET', body, signal } = options;
   let response: Response;
 
   try {
-    response = await fetch(path, { signal, headers: { accept: 'application/json' } });
+    response = await fetch(path, {
+      method,
+      signal,
+      headers: {
+        accept: 'application/json',
+        ...(body !== undefined ? { 'content-type': 'application/json' } : {}),
+      },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
   } catch (error) {
     // An aborted request is a normal part of debounced search, not a failure to report.
     if (error instanceof DOMException && error.name === 'AbortError') throw error;
@@ -57,7 +76,7 @@ async function fetchJson<T>(path: string, signal?: AbortSignal): Promise<T> {
 }
 
 export async function listBooks(signal?: AbortSignal): Promise<Book[]> {
-  const { data } = await fetchJson<ApiListResponse<Book>>('/api/books?limit=100', signal);
+  const { data } = await fetchJson<ApiListResponse<Book>>('/api/books?limit=100', { signal });
   return data;
 }
 
@@ -66,7 +85,27 @@ export async function searchBooks(term: string, signal?: AbortSignal): Promise<B
   // truncate the query, and '+' would arrive as a space.
   const { data } = await fetchJson<ApiSearchResponse>(
     `/api/books/search?q=${encodeURIComponent(term)}&limit=100`,
-    signal,
+    { signal },
+  );
+  return data;
+}
+
+export async function getBookById(id: string, signal?: AbortSignal): Promise<BookWithReviews> {
+  const { data } = await fetchJson<ApiItemResponse<BookWithReviews>>(
+    `/api/books/${encodeURIComponent(id)}`,
+    { signal },
+  );
+  return data;
+}
+
+export async function createReview(
+  bookId: string,
+  input: CreateReviewInput,
+  signal?: AbortSignal,
+): Promise<Review> {
+  const { data } = await fetchJson<ApiItemResponse<Review>>(
+    `/api/books/${encodeURIComponent(bookId)}/reviews`,
+    { method: 'POST', body: input, signal },
   );
   return data;
 }

@@ -1,0 +1,26 @@
+---
+description: Express 5 API conventions — apps/api
+globs: apps/api/**/*.ts
+alwaysApply: false
+---
+
+- Layering is `routes/` → `services/` → `data/*.repository.ts` → `jsonStore.ts`. Never
+  skip a layer; `services/` and `data/` never import `express`.
+- No `try/catch` in route handlers and no `asyncHandler` — Express 5 auto-forwards
+  rejected promises. If you're reaching for `asyncHandler`, you're pattern-matching on
+  Express 4; check `package.json` first.
+- Register more specific static paths (e.g. `/search`) before `/:id`-style params on
+  the same segment depth — Express matches in registration order. A sub-path with an
+  extra segment (`/:id/reviews`) doesn't collide with `/:id`, so no ordering issue there.
+- Throw `NotFoundError`/`ValidationError`/`ConflictError` from `../errors`; never set
+  `res.status` anywhere but the central error handler.
+- Validate all input with `parseOrThrow(schema, req.query | req.body)`; never let a raw
+  `ZodError` escape `middleware/validate.ts`.
+- Response envelope: success is `{ data: T }` (plus `meta` for paginated lists);
+  failure is `{ error: { code, message, details? } }`. Never a bare array or object.
+- `POST` → `201` + `Location` header + `{ data: created }`. `DELETE` → `204` with no
+  body, or let a `NotFoundError` produce the 404.
+- All collection writes go through `mutateCollection()` — a bare `readCollection` +
+  `writeCollection` pair reintroduces the lost-update race that mutex exists to prevent.
+- Never remove the unused `_next` parameter from `errorHandler` — Express identifies
+  error middleware by `fn.length === 4`.

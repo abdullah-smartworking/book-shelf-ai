@@ -1,0 +1,16 @@
+---
+description: React 19 + Tailwind frontend conventions — apps/web
+globs: apps/web/**/*.tsx,apps/web/**/*.ts
+alwaysApply: false
+---
+
+- No router dependency. View switching is `useState` in `App.tsx` — don't add
+  `react-router-dom` for a new page without asking first.
+- Import types and Zod schemas from `@bookshelf/shared` (type-only named imports);
+  never redeclare a shape the shared package already exports.
+- All HTTP calls go through `lib/api.ts`'s single `fetchJson` helper — add a new typed
+  function there, don't `fetch()` ad hoc from a component.
+- Tailwind only, mobile-first (unprefixed = phone; `sm:`/`lg:` scale up); no CSS beyond
+  `index.css`.
+- Reuse the loading/error/empty-state pattern in `components/states.tsx` rather than
+  inventing a new one per page.

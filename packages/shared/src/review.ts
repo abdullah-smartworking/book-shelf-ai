@@ -11,10 +11,7 @@ export const reviewSchema = z.object({
 
 export type Review = z.infer<typeof reviewSchema>;
 
-/**
- * Not wired up on Day 1 — the reviews endpoints land on Day 4. Defined here so
- * the shape is agreed up front and `GET /api/books/:id` can embed reviews today.
- */
+/** Validates POST /api/books/:id/reviews. Server stamps id/bookId/createdAt. */
 export const createReviewSchema = z.object({
   userId: z.string().trim().min(1, 'userId is required'),
   rating: z.number().int().min(1, 'rating must be 1-5').max(5, 'rating must be 1-5'),

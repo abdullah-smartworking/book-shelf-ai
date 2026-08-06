@@ -9,7 +9,11 @@ import { useBooks } from '../hooks/useBooks';
  * The catalogue page. Owns only the raw input value; `useBooks` owns the debouncing,
  * the requests and the derived state.
  */
-export function CataloguePage(): React.JSX.Element {
+export function CataloguePage({
+  onSelectBook,
+}: {
+  onSelectBook: (id: string) => void;
+}): React.JSX.Element {
   const [term, setTerm] = useState('');
   const { books, isLoading, error, isSearching, activeTerm, retry } = useBooks(term);
 
@@ -31,12 +35,12 @@ export function CataloguePage(): React.JSX.Element {
         ) : books.length === 0 ? (
           <EmptyState term={activeTerm} />
         ) : (
-          <BookGrid books={books} />
+          <BookGrid books={books} onSelectBook={onSelectBook} />
         )}
       </main>
 
       <footer className="mx-auto max-w-7xl px-4 pb-10 text-xs text-muted sm:px-6 lg:px-8">
-        BookShelf — Day 2. Data served from <code>data/books.json</code>.
+        BookShelf. Data served from <code>data/books.json</code>.
       </footer>
     </div>
   );

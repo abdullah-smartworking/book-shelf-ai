@@ -335,6 +335,102 @@ describe('POST /api/books', () => {
   });
 });
 
+describe('PUT /api/books/:id', () => {
+  it('updates only the fields provided, leaving the rest untouched', async () => {
+    const response = await fetch(`${baseUrl}/api/books/book_002`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ year: 1966 }),
+    });
+    const body = (await response.json()) as { data: Book };
+
+    assert.equal(response.status, 200);
+    assert.equal(body.data.year, 1966);
+    assert.equal(body.data.title, 'Dune', 'untouched field must survive the update');
+    assert.equal(body.data.author, 'Frank Herbert');
+
+    const onDisk = await readBooksFile();
+    assert.equal(onDisk.find((book) => book.id === 'book_002')?.year, 1966);
+  });
+
+  it('returns 404 NOT_FOUND for an unknown id', async () => {
+    const response = await fetch(`${baseUrl}/api/books/book_999`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ year: 2000 }),
+    });
+    const body = (await response.json()) as ApiErrorResponse;
+
+    assert.equal(response.status, 404);
+    assert.equal(body.error.code, 'NOT_FOUND');
+  });
+
+  it('rejects an empty body — nothing to update is not a valid request', async () => {
+    const response = await fetch(`${baseUrl}/api/books/book_002`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    const body = (await response.json()) as ApiErrorResponse;
+
+    assert.equal(response.status, 400);
+    assert.equal(body.error.code, 'VALIDATION_ERROR');
+  });
+
+  it('rejects an invalid field value with the same rules as create', async () => {
+    const response = await fetch(`${baseUrl}/api/books/book_002`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ title: '' }),
+    });
+    const body = (await response.json()) as ApiErrorResponse;
+
+    assert.equal(response.status, 400);
+    assert.equal(body.error.code, 'VALIDATION_ERROR');
+  });
+
+  it('rejects a change to an ISBN already used by another book', async () => {
+    const response = await fetch(`${baseUrl}/api/books/book_003`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      // book_002 (Dune) owns this ISBN.
+      body: JSON.stringify({ isbn: '978-0441013593' }),
+    });
+    const body = (await response.json()) as ApiErrorResponse;
+
+    assert.equal(response.status, 409);
+    assert.equal(body.error.code, 'CONFLICT');
+  });
+});
+
+describe('DELETE /api/books/:id', () => {
+  it('deletes an existing book and returns 204 with no body', async () => {
+    const response = await fetch(`${baseUrl}/api/books/book_003`, { method: 'DELETE' });
+
+    assert.equal(response.status, 204);
+    assert.equal(await response.text(), '');
+
+    const onDisk = await readBooksFile();
+    assert.ok(!onDisk.some((book) => book.id === 'book_003'), 'book must be gone from disk');
+  });
+
+  it('returns 404 NOT_FOUND deleting the same book again', async () => {
+    const response = await fetch(`${baseUrl}/api/books/book_003`, { method: 'DELETE' });
+    const body = (await response.json()) as ApiErrorResponse;
+
+    assert.equal(response.status, 404);
+    assert.equal(body.error.code, 'NOT_FOUND');
+  });
+
+  it('returns 404 NOT_FOUND for an id that never existed', async () => {
+    const response = await fetch(`${baseUrl}/api/books/book_999`, { method: 'DELETE' });
+    const body = (await response.json()) as ApiErrorResponse;
+
+    assert.equal(response.status, 404);
+    assert.equal(body.error.code, 'NOT_FOUND');
+  });
+});
+
 describe('unmatched routes', () => {
   it('returns a JSON 404 rather than Express HTML', async () => {
     const response = await fetch(`${baseUrl}/api/nope`);

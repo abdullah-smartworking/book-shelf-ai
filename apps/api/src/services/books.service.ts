@@ -7,8 +7,10 @@ import type {
   BookWithReviews,
   CreateBookInput,
   ListBooksQuery,
+  NewBook,
   SearchBooksQuery,
   SortOrder,
+  UpdateBookInput,
 } from '@bookshelf/shared';
 
 import * as booksRepository from '../data/books.repository';
@@ -122,6 +124,53 @@ export async function createBook(input: CreateBookInput): Promise<Book> {
     description: input.description,
     coverUrl: input.coverUrl,
   });
+}
+
+/**
+ * `PUT /api/books/:id`
+ *
+ * Same field-by-field discipline as `createBook`: only keys present on `input`
+ * (which the schema already limits to the seven updatable fields) are forwarded,
+ * so `undefined` never overwrites an existing value with "nothing."
+ */
+export async function updateBook(id: string, input: UpdateBookInput): Promise<Book> {
+  const patch: Partial<NewBook> = {};
+  if (input.title !== undefined) patch.title = input.title;
+  if (input.author !== undefined) patch.author = input.author;
+  if (input.genre !== undefined) patch.genre = input.genre;
+  if (input.year !== undefined) patch.year = input.year;
+  if (input.isbn !== undefined) patch.isbn = input.isbn;
+  if (input.description !== undefined) patch.description = input.description;
+  if (input.coverUrl !== undefined) patch.coverUrl = input.coverUrl;
+
+  const book = await booksRepository.update(id, patch);
+  if (book === undefined) {
+    throw new NotFoundError(`No book found with id "${id}"`, { id });
+  }
+  return book;
+}
+
+/**
+ * `DELETE /api/books/:id`
+ *
+ * Deliberately does NOT cascade into shelves or reviews:
+ *  - There is no shelves repository/service/route anywhere in this codebase yet —
+ *    only a seeded `data/shelves.json` nothing else touches. Building a shelves
+ *    feature solely to satisfy a cascade-delete is the scope creep CLAUDE.md's
+ *    "Don't widen scope" rule calls out. Flagging it instead: deleting a book can
+ *    leave its id dangling inside some shelf's `bookIds` array; whoever builds the
+ *    shelves feature should filter dangling ids on read or backfill a cleanup pass.
+ *  - Reviews DO have a repository, so cascading there is a real 5-minute addition —
+ *    also skipped here, also flagged rather than silently decided either way, since
+ *    nothing asked for it. `reviews.service.listReviewsForBook` will 404 for this id
+ *    going forward anyway (the book lookup fails first), so orphaned reviews are
+ *    unreachable through the API even though they remain on disk.
+ */
+export async function deleteBook(id: string): Promise<void> {
+  const deleted = await booksRepository.remove(id);
+  if (!deleted) {
+    throw new NotFoundError(`No book found with id "${id}"`, { id });
+  }
 }
 
 const SEARCHABLE_FIELDS = ['title', 'author', 'genre', 'description'] as const;

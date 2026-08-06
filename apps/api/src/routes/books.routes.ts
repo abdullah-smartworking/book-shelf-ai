@@ -2,12 +2,15 @@ import { Router } from 'express';
 
 import {
   createBookSchema,
+  createReviewSchema,
   listBooksQuerySchema,
   searchBooksQuerySchema,
+  updateBookSchema,
 } from '@bookshelf/shared';
 
 import { parseOrThrow } from '../middleware/validate';
 import * as booksService from '../services/books.service';
+import * as reviewsService from '../services/reviews.service';
 
 /**
  * Route layer = HTTP only. Its whole job is: validate input, call a service,
@@ -61,4 +64,39 @@ booksRouter.post('/', async (req, res) => {
   const input = parseOrThrow(createBookSchema, req.body);
   const book = await booksService.createBook(input);
   res.status(201).location(`/api/books/${book.id}`).json({ data: book });
+});
+
+/** `PUT /api/books/:id` — partial update; only fields present in the body change. */
+booksRouter.put('/:id', async (req, res) => {
+  const input = parseOrThrow(updateBookSchema, req.body);
+  const book = await booksService.updateBook(req.params.id, input);
+  res.json({ data: book });
+});
+
+/** `DELETE /api/books/:id` — removes a book. 404 if it never existed. */
+booksRouter.delete('/:id', async (req, res) => {
+  await booksService.deleteBook(req.params.id);
+  res.status(204).end();
+});
+
+/**
+ * `GET /api/books/:id/reviews` — reviews for one book, newest first.
+ *
+ * An extra path segment beyond `/:id`, so this does not collide with the
+ * `/search`-before-`/:id` ordering rule above — it's a deeper path, not a
+ * sibling of either.
+ */
+booksRouter.get('/:id/reviews', async (req, res) => {
+  const reviews = await reviewsService.listReviewsForBook(req.params.id);
+  res.json({ data: reviews });
+});
+
+/** `POST /api/books/:id/reviews` — add a review. Same 201 + Location convention as POST /api/books. */
+booksRouter.post('/:id/reviews', async (req, res) => {
+  const input = parseOrThrow(createReviewSchema, req.body);
+  const review = await reviewsService.createReview(req.params.id, input);
+  res
+    .status(201)
+    .location(`/api/books/${req.params.id}/reviews/${review.id}`)
+    .json({ data: review });
 });

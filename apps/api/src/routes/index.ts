@@ -5,8 +5,9 @@ import { booksRouter } from './books.routes';
 /**
  * Single mounting point for everything under `/api`.
  *
- * Adding `/api/shelves` and `/api/books/:id/reviews` later in the week is a
- * one-line change here rather than a change in `app.ts`.
+ * Reviews nest directly onto `booksRouter` (see `/:id/reviews` there) — no change
+ * needed here for that. Adding `/api/shelves` later is still a one-line change here
+ * rather than a change in `app.ts`.
  */
 export const apiRouter = Router();
 

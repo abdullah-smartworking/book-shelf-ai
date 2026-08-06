@@ -40,9 +40,11 @@ export function LoadingGrid(): React.JSX.Element {
 }
 
 export function ErrorState({
+  title = 'Could not load the catalogue',
   message,
   onRetry,
 }: {
+  title?: string;
   message: string;
   onRetry: () => void;
 }): React.JSX.Element {
@@ -51,7 +53,7 @@ export function ErrorState({
       role="alert"
       className="mx-auto max-w-md rounded-xl border border-accent/40 bg-surface p-8 text-center"
     >
-      <p className="font-serif text-lg font-semibold text-ink">Could not load the catalogue</p>
+      <p className="font-serif text-lg font-semibold text-ink">{title}</p>
       <p className="mt-2 text-sm text-muted">{message}</p>
       <button
         type="button"

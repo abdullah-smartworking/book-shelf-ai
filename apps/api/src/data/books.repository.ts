@@ -62,3 +62,46 @@ export function create(input: NewBook): Promise<Book> {
     return { items: [...books, book], result: book };
   });
 }
+
+/**
+ * Applies a partial update and returns the persisted record, or `undefined` if
+ * `id` matches nothing (the service turns that into a 404). Mirrors `create`'s
+ * ISBN uniqueness check — atomic with the write, inside the mutator — but only
+ * re-checks it when `patch` actually changes the isbn to a new, non-null value.
+ */
+export function update(id: string, patch: Partial<NewBook>): Promise<Book | undefined> {
+  return mutateCollection<Book, Book | undefined>(COLLECTION, (books) => {
+    const index = books.findIndex((book) => book.id === id);
+    if (index === -1) {
+      return { items: books, result: undefined };
+    }
+
+    const current = books[index];
+    if (
+      patch.isbn !== undefined &&
+      patch.isbn !== null &&
+      patch.isbn !== current.isbn &&
+      books.some((book) => book.id !== id && book.isbn === patch.isbn)
+    ) {
+      throw new ConflictError(`A book with ISBN ${patch.isbn} already exists`, {
+        isbn: patch.isbn,
+      });
+    }
+
+    const updated: Book = { ...current, ...patch };
+    const items = [...books];
+    items[index] = updated;
+    return { items, result: updated };
+  });
+}
+
+/**
+ * Deletes a book. Returns `true` if something was removed, `false` if `id`
+ * matched nothing — the service turns that into a 404.
+ */
+export function remove(id: string): Promise<boolean> {
+  return mutateCollection<Book, boolean>(COLLECTION, (books) => {
+    const filtered = books.filter((book) => book.id !== id);
+    return { items: filtered, result: filtered.length !== books.length };
+  });
+}
