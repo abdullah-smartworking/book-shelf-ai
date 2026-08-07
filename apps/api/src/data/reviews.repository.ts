@@ -16,6 +16,14 @@ export async function findByBookId(bookId: string): Promise<Review[]> {
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
+/** Reviews written by one user, newest first — same shape as `findByBookId`. */
+export async function findByUserId(userId: string): Promise<Review[]> {
+  const reviews = await findAll();
+  return reviews
+    .filter((review) => review.userId === userId)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
 /** Mirrors `nextBookId` in books.repository.ts — same scheme, `review_NNN`. */
 function nextReviewId(reviews: Review[]): string {
   const highest = reviews.reduce((max, review) => {

@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import { booksRouter } from './books.routes';
 import { listsRouter } from './lists.routes';
+import { usersRouter } from './users.routes';
 
 /**
  * Single mounting point for everything under `/api`.
@@ -14,3 +15,4 @@ export const apiRouter = Router();
 
 apiRouter.use('/books', booksRouter);
 apiRouter.use('/lists', listsRouter);
+apiRouter.use('/users', usersRouter);
