@@ -4,6 +4,18 @@ import type { BookWithReviews, CreateReviewInput } from '@bookshelf/shared';
 
 import { ApiError, createReview, getBookById } from '../lib/api';
 
+/**
+ * Mirrors `computeAverageRating` in apps/api/src/services/books.service.ts.
+ * Small and pure enough that duplicating it beats introducing a shared-logic
+ * export from @bookshelf/shared for one four-line function — but if this
+ * drifts from the server's version, the average shown here goes wrong.
+ */
+function computeAverageRating(ratings: number[]): number | null {
+  if (ratings.length === 0) return null;
+  const total = ratings.reduce((sum, rating) => sum + rating, 0);
+  return Math.round((total / ratings.length) * 10) / 10;
+}
+
 export interface UseBookDetailResult {
   book: BookWithReviews | null;
   isLoading: boolean;
@@ -60,10 +72,18 @@ export function useBookDetail(bookId: string): UseBookDetailResult {
       try {
         const review = await createReview(bookId, input);
         // Prepend rather than refetch: findByBookId sorts newest-first by
-        // createdAt, and the just-created review is always the newest.
-        setBook((current) =>
-          current === null ? current : { ...current, reviews: [review, ...current.reviews] },
-        );
+        // createdAt, and the just-created review is always the newest. The
+        // average must be recomputed here too — otherwise it goes stale until
+        // the next fetch, silently showing a rating that ignores this review.
+        setBook((current) => {
+          if (current === null) return current;
+          const reviews = [review, ...current.reviews];
+          return {
+            ...current,
+            reviews,
+            averageRating: computeAverageRating(reviews.map((r) => r.rating)),
+          };
+        });
       } catch (cause) {
         setSubmitError(cause instanceof ApiError ? cause.message : 'Could not submit the review.');
         throw cause;

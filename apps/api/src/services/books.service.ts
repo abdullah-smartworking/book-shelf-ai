@@ -8,6 +8,7 @@ import type {
   CreateBookInput,
   ListBooksQuery,
   NewBook,
+  Review,
   SearchBooksQuery,
   SortOrder,
   UpdateBookInput,
@@ -88,6 +89,18 @@ export async function listBooks(query: ListBooksQuery): Promise<ApiListResponse<
 }
 
 /**
+ * One decimal place is the standard granularity for a star rating (e.g. "4.3
+ * average"); more would be false precision for a scale of 1-5.
+ */
+function computeAverageRating(reviews: Review[]): number | null {
+  if (reviews.length === 0) {
+    return null;
+  }
+  const total = reviews.reduce((sum, review) => sum + review.rating, 0);
+  return Math.round((total / reviews.length) * 10) / 10;
+}
+
+/**
  * `GET /api/books/:id`
  *
  * The spec says "get a single book (with reviews)", so reviews are embedded. Both
@@ -104,7 +117,7 @@ export async function getBookById(id: string): Promise<BookWithReviews> {
     throw new NotFoundError(`No book found with id "${id}"`, { id });
   }
 
-  return { ...book, reviews };
+  return { ...book, reviews, averageRating: computeAverageRating(reviews) };
 }
 
 /**
