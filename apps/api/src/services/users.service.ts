@@ -1,8 +1,15 @@
-import type { CreateUserInput, Review, UpdateUserInput, User, UserWithStats } from '@bookshelf/shared';
+import type { Book, CreateUserInput, Review, UpdateUserInput, User, UserWithStats } from '@bookshelf/shared';
 
+import * as booksRepository from '../data/books.repository';
 import * as reviewsRepository from '../data/reviews.repository';
 import * as usersRepository from '../data/users.repository';
 import { NotFoundError } from '../errors';
+
+/** A rating at or above this counts as "the user liked this genre." */
+const LIKED_RATING_THRESHOLD = 4;
+
+/** Hard cap — 30 books across 10 genres means "all of them" is never useful. */
+const MAX_RECOMMENDATIONS = 10;
 
 /**
  * Service layer = business logic. No `req`/`res`, no file access — see
@@ -92,4 +99,53 @@ export async function getUserActivity(id: string): Promise<Review[]> {
     throw new NotFoundError(`No user found with id "${id}"`, { id });
   }
   return reviewsRepository.findByUserId(id);
+}
+
+/**
+ * `GET /api/users/:id/recommendations`
+ *
+ * Never recommends a book the user has already reviewed. Ranks by genre
+ * match strength, ties broken by most recently added:
+ *   - score 2: genre is an explicit `favouriteGenres` entry
+ *   - score 1: genre isn't a stated favourite, but the user rated a book in
+ *     that genre >= LIKED_RATING_THRESHOLD — inferred interest, ranked below
+ *     a stated one on purpose (a user said this explicitly; the other is a guess)
+ * A book matching neither is excluded entirely, not scored 0 — there's no
+ * signal at all connecting it to this user.
+ */
+export async function getRecommendationsForUser(id: string): Promise<Book[]> {
+  const [user, reviews, books] = await Promise.all([
+    usersRepository.findById(id),
+    reviewsRepository.findByUserId(id),
+    booksRepository.findAll(),
+  ]);
+
+  if (user === undefined) {
+    throw new NotFoundError(`No user found with id "${id}"`, { id });
+  }
+
+  const booksById = new Map(books.map((book) => [book.id, book] as const));
+  const reviewedBookIds = new Set(reviews.map((review) => review.bookId));
+
+  const likedGenres = new Set<string>();
+  for (const review of reviews) {
+    if (review.rating < LIKED_RATING_THRESHOLD) continue;
+    const reviewedBook = booksById.get(review.bookId);
+    if (reviewedBook !== undefined) likedGenres.add(reviewedBook.genre);
+  }
+  const favouriteGenres = new Set(user.favouriteGenres);
+
+  const scored: Array<{ book: Book; score: number }> = [];
+  for (const book of books) {
+    if (reviewedBookIds.has(book.id)) continue;
+    if (favouriteGenres.has(book.genre)) {
+      scored.push({ book, score: 2 });
+    } else if (likedGenres.has(book.genre)) {
+      scored.push({ book, score: 1 });
+    }
+  }
+
+  scored.sort((a, b) => b.score - a.score || b.book.addedAt.localeCompare(a.book.addedAt));
+
+  return scored.slice(0, MAX_RECOMMENDATIONS).map((entry) => entry.book);
 }

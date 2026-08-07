@@ -51,3 +51,12 @@ usersRouter.get('/:id/activity', async (req, res) => {
   const activity = await usersService.getUserActivity(req.params.id);
   res.json({ data: activity });
 });
+
+/**
+ * `GET /api/users/:id/recommendations` — up to 10 unreviewed books ranked by
+ * genre match. Same segment-depth reasoning as `/:id/activity` above.
+ */
+usersRouter.get('/:id/recommendations', async (req, res) => {
+  const recommendations = await usersService.getRecommendationsForUser(req.params.id);
+  res.json({ data: recommendations });
+});
