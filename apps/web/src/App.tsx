@@ -4,16 +4,16 @@ import { BookDetailPage } from './pages/BookDetailPage';
 import { CataloguePage } from './pages/CataloguePage';
 import { ListDetailPage } from './pages/ListDetailPage';
 import { ListsPage } from './pages/ListsPage';
+import { ProfilePage } from './pages/ProfilePage';
 
-type Tab = 'catalogue' | 'lists';
+type Tab = 'catalogue' | 'lists' | 'profile';
 
 /**
- * Two tabs, each owning its own drill-down id — still no router. `react-router-dom`
- * would buy a dependency and a <Routes> tree for what three `useState<string | null>`
- * calls already do (see CLAUDE.md's "Don't add react-router-dom" note, and this same
- * reasoning in the original single-tab version of this file). Reading Lists is a
- * genuine third page, which is exactly the point CLAUDE.md says to revisit at — this
- * revisits it as one more piece of state, not a router.
+ * Three tabs, still no router — `react-router-dom` would buy a dependency and a
+ * <Routes> tree for what a handful of `useState` calls already do (see
+ * CLAUDE.md's "Don't add react-router-dom" note). Profile has no drill-down id
+ * of its own (it owns its own userId lookup internally), so it needs no entry
+ * here beyond the tab switch itself.
  *
  * `selectedBookId` is shared across tabs: opening a book from a list's detail view
  * shows the same BookDetailPage the catalogue uses, and its `onBack` clears just that
@@ -35,7 +35,7 @@ export function App(): React.JSX.Element {
     <>
       <nav className="border-b border-line bg-paper">
         <div className="mx-auto flex max-w-7xl gap-1 px-4 sm:px-6 lg:px-8">
-          {(['catalogue', 'lists'] as const).map((candidate) => (
+          {(['catalogue', 'lists', 'profile'] as const).map((candidate) => (
             <button
               key={candidate}
               type="button"
@@ -46,7 +46,7 @@ export function App(): React.JSX.Element {
                   : 'border-transparent text-muted hover:text-ink'
               }`}
             >
-              {candidate === 'catalogue' ? 'Catalogue' : 'Reading Lists'}
+              {candidate === 'catalogue' ? 'Catalogue' : candidate === 'lists' ? 'Reading Lists' : 'Profile'}
             </button>
           ))}
         </div>
@@ -71,6 +71,8 @@ export function App(): React.JSX.Element {
             onSelectBook={setSelectedBookId}
           />
         ))}
+
+      {tab === 'profile' && <ProfilePage />}
     </>
   );
 }

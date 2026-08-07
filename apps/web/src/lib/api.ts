@@ -8,10 +8,14 @@ import type {
   BookWithReviews,
   CreateListInput,
   CreateReviewInput,
+  CreateUserInput,
   List,
   ListWithBooks,
   Review,
   UpdateListBooksRequest,
+  UpdateUserInput,
+  User,
+  UserWithStats,
 } from '@bookshelf/shared';
 
 /**
@@ -160,4 +164,52 @@ export async function updateListBooks(
 
 export async function deleteList(id: string, signal?: AbortSignal): Promise<void> {
   await fetchJson<undefined>(`/api/lists/${encodeURIComponent(id)}`, { method: 'DELETE', signal });
+}
+
+// --- User profiles ------------------------------------------------------------
+
+export async function getUserById(id: string, signal?: AbortSignal): Promise<UserWithStats> {
+  const { data } = await fetchJson<ApiItemResponse<UserWithStats>>(
+    `/api/users/${encodeURIComponent(id)}`,
+    { signal },
+  );
+  return data;
+}
+
+/**
+ * Returns a bare `User` — the server's `POST /api/users` response has no `stats`
+ * (see `users.routes.ts`). A freshly created profile genuinely has zero reviews,
+ * so callers may safely assume `{ reviewCount: 0, averageRatingGiven: null }`
+ * without a second request, but that assumption belongs at the call site, not
+ * baked into this function's return type.
+ */
+export async function createUser(input: CreateUserInput, signal?: AbortSignal): Promise<User> {
+  const { data } = await fetchJson<ApiItemResponse<User>>('/api/users', {
+    method: 'POST',
+    body: input,
+    signal,
+  });
+  return data;
+}
+
+/**
+ * Returns a bare `User` — same reasoning as `createUser`. Unlike creation,
+ * an update does NOT reset stats to zero; the caller must merge this against
+ * whatever stats it already has, not assume a fresh value.
+ */
+export async function updateUser(id: string, input: UpdateUserInput, signal?: AbortSignal): Promise<User> {
+  const { data } = await fetchJson<ApiItemResponse<User>>(`/api/users/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    body: input,
+    signal,
+  });
+  return data;
+}
+
+export async function getUserActivity(id: string, signal?: AbortSignal): Promise<Review[]> {
+  const { data } = await fetchJson<ApiItemResponse<Review[]>>(
+    `/api/users/${encodeURIComponent(id)}/activity`,
+    { signal },
+  );
+  return data;
 }
