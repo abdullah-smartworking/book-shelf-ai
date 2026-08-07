@@ -213,3 +213,11 @@ export async function getUserActivity(id: string, signal?: AbortSignal): Promise
   );
   return data;
 }
+
+export async function getUserRecommendations(id: string, signal?: AbortSignal): Promise<Book[]> {
+  const { data } = await fetchJson<ApiItemResponse<Book[]>>(
+    `/api/users/${encodeURIComponent(id)}/recommendations`,
+    { signal },
+  );
+  return data;
+}

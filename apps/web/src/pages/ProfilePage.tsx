@@ -15,8 +15,19 @@ export function ProfilePage(): React.JSX.Element {
   const [activeUserId, setActiveUserId] = useState('');
   const [isEditing, setIsEditing] = useState(false);
 
-  const { profile, activity, isLoading, notFound, error, retry, createProfile, editProfile, isSaving, saveError } =
-    useProfile(activeUserId);
+  const {
+    profile,
+    activity,
+    recommendations,
+    isLoading,
+    notFound,
+    error,
+    retry,
+    createProfile,
+    editProfile,
+    isSaving,
+    saveError,
+  } = useProfile(activeUserId);
 
   function handleLoad(event: React.FormEvent): void {
     event.preventDefault();
@@ -128,6 +139,26 @@ export function ProfilePage(): React.JSX.Element {
                   </ul>
                 )}
               </section>
+
+              {recommendations.length > 0 && (
+                <section className="mt-8">
+                  <h3 className="font-serif text-lg font-semibold text-ink">Recommended for you</h3>
+                  <ul className="mt-3 space-y-2">
+                    {recommendations.map((book) => (
+                      <li key={book.id} className="rounded-xl border border-line bg-surface p-3 text-sm">
+                        <span className="font-medium text-ink">{book.title}</span>{' '}
+                        <span className="text-muted">by {book.author}</span>
+                        <span
+                          className="ml-2 rounded-full bg-accent-soft px-2 py-0.5 text-[0.65rem] font-semibold
+                                     uppercase tracking-wider text-accent"
+                        >
+                          {book.genre}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
             </>
           )}
         </div>

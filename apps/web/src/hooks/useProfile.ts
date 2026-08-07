@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import type { CreateUserInput, Review, UpdateUserInput, UserWithStats } from '@bookshelf/shared';
+import type { Book, CreateUserInput, Review, UpdateUserInput, UserWithStats } from '@bookshelf/shared';
 
-import { ApiError, createUser, getUserActivity, getUserById, updateUser } from '../lib/api';
+import { ApiError, createUser, getUserActivity, getUserById, getUserRecommendations, updateUser } from '../lib/api';
 
 export interface UseProfileResult {
   profile: UserWithStats | null;
   activity: Review[];
+  recommendations: Book[];
   isLoading: boolean;
   /** `true` once loading has finished and no profile exists for this id — not an error. */
   notFound: boolean;
@@ -22,6 +23,7 @@ export interface UseProfileResult {
 export function useProfile(userId: string): UseProfileResult {
   const [profile, setProfile] = useState<UserWithStats | null>(null);
   const [activity, setActivity] = useState<Review[]>([]);
+  const [recommendations, setRecommendations] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +37,7 @@ export function useProfile(userId: string): UseProfileResult {
     if (userId.trim() === '') {
       setProfile(null);
       setActivity([]);
+      setRecommendations([]);
       setIsLoading(false);
       setNotFound(false);
       setError(null);
@@ -48,11 +51,16 @@ export function useProfile(userId: string): UseProfileResult {
     setError(null);
     setNotFound(false);
 
-    Promise.all([getUserById(userId, controller.signal), getUserActivity(userId, controller.signal)])
-      .then(([userResult, activityResult]) => {
+    Promise.all([
+      getUserById(userId, controller.signal),
+      getUserActivity(userId, controller.signal),
+      getUserRecommendations(userId, controller.signal),
+    ])
+      .then(([userResult, activityResult, recommendationsResult]) => {
         if (cancelled) return;
         setProfile(userResult);
         setActivity(activityResult);
+        setRecommendations(recommendationsResult);
         setIsLoading(false);
       })
       .catch((cause: unknown) => {
@@ -61,6 +69,7 @@ export function useProfile(userId: string): UseProfileResult {
           // No profile for this id yet — the page offers to create one. Not an error.
           setProfile(null);
           setActivity([]);
+          setRecommendations([]);
           setNotFound(true);
           setIsLoading(false);
           return;
@@ -84,6 +93,11 @@ export function useProfile(userId: string): UseProfileResult {
         // A brand-new profile genuinely has zero reviews — no second request needed.
         setProfile({ ...user, stats: { reviewCount: 0, averageRatingGiven: null } });
         setActivity([]);
+        // A new profile's recommendations depend on favouriteGenres just submitted —
+        // worth a real fetch rather than assuming empty, unlike activity/stats.
+        getUserRecommendations(user.id)
+          .then(setRecommendations)
+          .catch(() => setRecommendations([]));
         setNotFound(false);
       } catch (cause) {
         setSaveError(cause instanceof ApiError ? cause.message : 'Could not create the profile.');
@@ -117,6 +131,7 @@ export function useProfile(userId: string): UseProfileResult {
   return {
     profile,
     activity,
+    recommendations,
     isLoading,
     notFound,
     error,
