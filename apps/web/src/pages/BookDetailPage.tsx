@@ -1,3 +1,4 @@
+import { AddToListControl } from '../components/AddToListControl';
 import { ReviewCard } from '../components/ReviewCard';
 import { ReviewForm } from '../components/ReviewForm';
 import { ErrorState } from '../components/states';
@@ -63,6 +64,8 @@ export function BookDetailPage({
             {book.isbn !== null && (
               <p className="mt-3 font-mono text-xs text-muted/70">{book.isbn}</p>
             )}
+
+            <AddToListControl bookId={book.id} />
 
             <section className="mt-8">
               <h2 className="font-serif text-lg font-semibold text-ink">
