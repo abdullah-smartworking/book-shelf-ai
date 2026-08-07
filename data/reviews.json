@@ -70,5 +70,13 @@
     "rating": 4,
     "text": "Repetitive by design, since he was writing to himself. Better read a page at a time than cover to cover.",
     "createdAt": "2025-01-28T06:45:00Z"
+  },
+  {
+    "id": "review_010",
+    "bookId": "book_007",
+    "userId": "playwright_tester",
+    "rating": 4,
+    "text": "Testing the review form end-to-end via Playwright MCP. Everything's wired up correctly.",
+    "createdAt": "2026-08-07T07:08:06.229Z"
   }
 ]

@@ -19,6 +19,9 @@ data/*.tmp.*
 # Claude Code local settings (machine-specific; CLAUDE.md itself IS committed — Day 2)
 .claude/settings.local.json
 
+# Playwright MCP's own snapshot/log output — regenerated every run, not source
+.playwright-mcp/
+
 # logs
 *.log
 npm-debug.log*
