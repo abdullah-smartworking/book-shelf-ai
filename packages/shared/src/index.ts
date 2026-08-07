@@ -7,5 +7,6 @@
  */
 export * from './api';
 export * from './book';
+export * from './list';
 export * from './review';
 export * from './shelf';

@@ -6,8 +6,12 @@ import type {
   Book,
   BookSearchHit,
   BookWithReviews,
+  CreateListInput,
   CreateReviewInput,
+  List,
+  ListWithBooks,
   Review,
+  UpdateListBooksRequest,
 } from '@bookshelf/shared';
 
 /**
@@ -37,7 +41,7 @@ export class ApiError extends Error {
  * `code` and never have to inspect status codes or response bodies themselves.
  */
 interface FetchJsonOptions {
-  method?: 'GET' | 'POST';
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   body?: unknown;
   signal?: AbortSignal;
 }
@@ -71,6 +75,10 @@ async function fetchJson<T>(path: string, options: FetchJsonOptions = {}): Promi
       body?.error?.message ?? `Request failed with status ${response.status}`,
     );
   }
+
+  // 204 No Content (DELETE /api/lists/:id) has no body to parse — every other
+  // success response in this app is `{ data: ... }` and does have one.
+  if (response.status === 204) return undefined as T;
 
   return (await response.json()) as T;
 }
@@ -108,4 +116,48 @@ export async function createReview(
     { method: 'POST', body: input, signal },
   );
   return data;
+}
+
+// --- Reading lists -----------------------------------------------------------
+// Per notes/day4-agent-teams/api-contract.md. `GET /api/lists` has no `meta` (lists
+// are expected to stay small, no pagination) so it does not use `ApiListResponse<T>`
+// — that type's `meta` field is required, which this endpoint's response doesn't have.
+
+export async function listLists(signal?: AbortSignal): Promise<List[]> {
+  const { data } = await fetchJson<{ data: List[] }>('/api/lists', { signal });
+  return data;
+}
+
+export async function getListById(id: string, signal?: AbortSignal): Promise<ListWithBooks> {
+  const { data } = await fetchJson<ApiItemResponse<ListWithBooks>>(
+    `/api/lists/${encodeURIComponent(id)}`,
+    { signal },
+  );
+  return data;
+}
+
+export async function createList(input: CreateListInput, signal?: AbortSignal): Promise<List> {
+  const { data } = await fetchJson<ApiItemResponse<List>>('/api/lists', {
+    method: 'POST',
+    body: input,
+    signal,
+  });
+  return data;
+}
+
+/** `add`/`remove` are both optional but the contract requires at least one non-empty. */
+export async function updateListBooks(
+  id: string,
+  input: UpdateListBooksRequest,
+  signal?: AbortSignal,
+): Promise<List> {
+  const { data } = await fetchJson<ApiItemResponse<List>>(
+    `/api/lists/${encodeURIComponent(id)}/books`,
+    { method: 'PUT', body: input, signal },
+  );
+  return data;
+}
+
+export async function deleteList(id: string, signal?: AbortSignal): Promise<void> {
+  await fetchJson<undefined>(`/api/lists/${encodeURIComponent(id)}`, { method: 'DELETE', signal });
 }

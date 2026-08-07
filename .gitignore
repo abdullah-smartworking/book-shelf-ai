@@ -22,6 +22,9 @@ data/*.tmp.*
 # Playwright MCP's own snapshot/log output — regenerated every run, not source
 .playwright-mcp/
 
+# Sub-agent worktrees — each one is a full checkout, cleaned up after merging
+.claude/worktrees/
+
 # logs
 *.log
 npm-debug.log*
