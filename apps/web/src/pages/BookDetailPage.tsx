@@ -65,9 +65,16 @@ export function BookDetailPage({
             )}
 
             <section className="mt-8">
-              <h2 className="font-serif text-lg font-semibold text-ink">
-                Reviews ({book.reviews.length})
-              </h2>
+              <div className="flex items-baseline gap-2">
+                <h2 className="font-serif text-lg font-semibold text-ink">
+                  Reviews ({book.reviews.length})
+                </h2>
+                {book.averageRating !== null && (
+                  <span className="text-sm text-muted">
+                    · {book.averageRating.toFixed(1)} average
+                  </span>
+                )}
+              </div>
 
               {book.reviews.length === 0 ? (
                 <p className="mt-2 text-sm text-muted">No reviews yet — be the first.</p>

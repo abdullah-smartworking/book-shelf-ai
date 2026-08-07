@@ -49,9 +49,14 @@ export interface ApiErrorResponse {
   };
 }
 
-/** `GET /api/books/:id` returns the book with its reviews embedded. */
+/**
+ * `GET /api/books/:id` returns the book with its reviews embedded, plus the
+ * average of those ratings. `null` (not `0`) when there are no reviews yet —
+ * a book with zero reviews has no average, it doesn't have a 0-star average.
+ */
 export interface BookWithReviews extends Book {
   reviews: Review[];
+  averageRating: number | null;
 }
 
 /** A single hit from `GET /api/books/search`, with the field that matched. */
